@@ -49,12 +49,30 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
   const [pwaInstalled, setPwaInstalled] = useState(false);
   const [showPwaBanner, setShowPwaBanner] = useState(false);
 
+  // Admin Security Auth Modal State
+  const [showAdminLoginModal, setShowAdminLoginModal] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+
   const unreadCount = notifikasiList.filter(n => !n.read).length;
 
   const handleInstallPWA = () => {
     setPwaInstalled(true);
     setShowPwaBanner(false);
     alert('Aplikasi CMS Gereja PWA telah berhasil terinstall di perangkat Anda!');
+  };
+
+  const handleAdminAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPinInput === '123456' || adminPinInput === 'admin123' || adminPinInput === 'admin') {
+      onRoleChange('admin_gereja');
+      setShowAdminLoginModal(false);
+      setAdminPinInput('');
+      setPinError('');
+      alert('Autentikasi Berhasil! Anda sekarang masuk ke Panel Admin Gereja.');
+    } else {
+      setPinError('PIN/Password Admin salah! Silakan masukkan 123456');
+    }
   };
 
   return (
@@ -103,18 +121,29 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
           <div className="min-w-0">
             <div className="relative">
-              <button
-                onClick={() => setIsChurchDropdownOpen(!isChurchDropdownOpen)}
-                className="flex items-center gap-1 font-black text-white text-xs sm:text-base tracking-wide hover:text-amber-300 transition-colors text-left cursor-pointer max-w-full"
-              >
-                <span className="max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-none truncate uppercase tracking-wider block">
-                  {selectedGereja ? selectedGereja.name : 'CMS Gereja'}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
-              </button>
+              {currentRole === 'jemaat' ? (
+                <div className="flex items-center gap-1 font-black text-white text-xs sm:text-base tracking-wide max-w-full">
+                  <span className="max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] truncate uppercase tracking-wider block">
+                    {selectedGereja ? selectedGereja.name : 'CMS Gereja'}
+                  </span>
+                  <span className="text-[10px] bg-amber-500/30 text-amber-300 font-extrabold px-2 py-0.5 rounded-full border border-amber-400/30 shrink-0">
+                    Gereja Saya
+                  </span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsChurchDropdownOpen(!isChurchDropdownOpen)}
+                  className="flex items-center gap-1 font-black text-white text-xs sm:text-base tracking-wide hover:text-amber-300 transition-colors text-left cursor-pointer max-w-full"
+                >
+                  <span className="max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-none truncate uppercase tracking-wider block">
+                    {selectedGereja ? selectedGereja.name : 'CMS Gereja'}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+                </button>
+              )}
 
-              {/* Church Selector Modal/Dropdown */}
-              {isChurchDropdownOpen && (
+              {/* Church Selector Modal/Dropdown (Only accessible for Admin/Superadmin) */}
+              {isChurchDropdownOpen && currentRole !== 'jemaat' && (
                 <div className="fixed sm:absolute top-16 sm:top-full left-2 sm:left-0 mt-1 w-72 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                     Pilih Gereja (Multi-Tenant)
@@ -210,25 +239,36 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
           {/* Role Switcher Pill */}
           <div className="relative">
             <button
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+              onClick={() => {
+                if (currentRole === 'jemaat') {
+                  setShowAdminLoginModal(true);
+                } else {
+                  setIsRoleDropdownOpen(!isRoleDropdownOpen);
+                }
+              }}
               className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-extrabold text-xs border shadow-sm transition-all cursor-pointer ${
                 currentRole === 'super_admin'
                   ? 'bg-purple-600 text-white border-purple-400'
                   : currentRole === 'admin_gereja'
                   ? 'bg-amber-500 text-slate-950 border-amber-300 font-black'
-                  : 'bg-white text-blue-950 border-white font-black'
+                  : 'bg-white text-blue-950 border-white font-black hover:bg-amber-400 hover:text-slate-950'
               }`}
+              title={currentRole === 'jemaat' ? 'Klik untuk Login Pengurus/Admin' : 'Ganti Akses Role'}
             >
               {currentRole === 'super_admin' && <Shield className="w-3.5 h-3.5 shrink-0" />}
               {currentRole === 'admin_gereja' && <Building2 className="w-3.5 h-3.5 shrink-0" />}
               {currentRole === 'jemaat' && <UserCheck className="w-3.5 h-3.5 text-blue-900 shrink-0" />}
               <span className="uppercase tracking-wider text-[10px] sm:text-[11px] whitespace-nowrap">
-                {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'admin_gereja' ? 'Admin' : 'Jemaat'}
+                {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'admin_gereja' ? 'Admin' : 'Mode Jemaat'}
               </span>
-              <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-80 shrink-0" />
+              {currentRole === 'jemaat' ? (
+                <span className="text-[10px] font-black bg-blue-900 text-white px-1.5 py-0.5 rounded-full">🔑 Login</span>
+              ) : (
+                <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-80 shrink-0" />
+              )}
             </button>
 
-            {isRoleDropdownOpen && (
+            {isRoleDropdownOpen && currentRole !== 'jemaat' && (
               <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-1 w-52 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                 <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                   Simulasi Hak Akses Role
@@ -274,6 +314,67 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* --- MODAL AUTENTIKASI ADMIN GEREJA (Mencegah Jemaat Masuk Akun Admin) --- */}
+      {showAdminLoginModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-slate-200 dark:border-slate-800 animate-fadeIn">
+            <button
+              onClick={() => {
+                setShowAdminLoginModal(false);
+                setPinError('');
+                setAdminPinInput('');
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+            
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 bg-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-amber-500/30">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Login Pengurus / Admin</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Jemaat biasa tidak dapat mengakses panel ini. Masukkan Kata Sandi atau PIN Keamanan Pengurus Gereja.
+              </p>
+            </div>
+
+            <form onSubmit={handleAdminAuthSubmit} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                  PIN / Password Keamanan Admin
+                </label>
+                <input
+                  type="password"
+                  value={adminPinInput}
+                  onChange={(e) => {
+                    setAdminPinInput(e.target.value);
+                    setPinError('');
+                  }}
+                  placeholder="Masukkan PIN (Contoh: 123456)"
+                  required
+                  autoFocus
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-sm font-mono text-center tracking-widest text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+                {pinError && (
+                  <p className="text-xs font-bold text-red-500 mt-1.5 text-center">{pinError}</p>
+                )}
+                <p className="text-[11px] text-slate-400 text-center mt-2">
+                  💡 PIN Demo Pengurus: <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-bold text-amber-600 dark:text-amber-400">123456</code>
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+              >
+                Masuk ke Panel Admin
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -261,6 +261,7 @@ export default function App() {
                 donasiList={donasiList}
                 kasData={kasData}
                 currentUser={currentUser}
+                pengaturan={pengaturan}
                 onRefreshData={() => loadChurchData(selectedGereja.id)}
                 onShowToast={showToastMsg}
               />
@@ -296,6 +297,7 @@ export default function App() {
                           donasiList={donasiList}
                           kasData={kasData}
                           currentUser={currentUser}
+                          pengaturan={pengaturan}
                           onRefreshData={() => loadChurchData(selectedGereja.id)}
                           onShowToast={showToastMsg}
                         />

@@ -24,7 +24,11 @@ import {
   Clock,
   MapPin,
   FolderPlus,
-  Calendar
+  Calendar,
+  Palette,
+  Layers,
+  Check,
+  Smartphone
 } from 'lucide-react';
 import {
   Gereja,
@@ -141,6 +145,58 @@ export const AdminGerejaView: React.FC<AdminGerejaViewProps> = ({
   const [sheetIdInput, setSheetIdInput] = useState(gereja.googleSheetId || '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
   const [driveFolderInput, setDriveFolderInput] = useState(gereja.googleDriveFolderId || '1zA9K_drive_folder_hkbp_grace');
   const [syncing, setSyncing] = useState(false);
+
+  // Theme Customization State
+  const [themeForm, setThemeForm] = useState({
+    churchNameCustom: pengaturan?.theme?.churchNameCustom || gereja.name || '',
+    logoUrlCustom: pengaturan?.theme?.logoUrlCustom || gereja.logoUrl || '',
+    bannerUrlCustom: pengaturan?.theme?.bannerUrlCustom || gereja.bannerUrl || '',
+    welcomeTitle: pengaturan?.theme?.welcomeTitle || 'Selamat Datang di Rumah Tuhan',
+    welcomeSubtitle: pengaturan?.theme?.welcomeSubtitle || 'Gereja yang Mengasihi, Melayani, dan Bertumbuh Bersama',
+    primaryColor: pengaturan?.theme?.primaryColor || 'blue',
+    backgroundStyle: pengaturan?.theme?.backgroundStyle || 'twilight',
+    cardStyle: pengaturan?.theme?.cardStyle || 'glassmorphic',
+    layoutStyle: pengaturan?.theme?.layoutStyle || 'modern_cards',
+    buttonRadius: pengaturan?.theme?.buttonRadius || 'modern_rounded'
+  });
+  const [isSavingTheme, setIsSavingTheme] = useState(false);
+
+  const handleSaveTheme = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingTheme(true);
+    try {
+      await ApiService.updatePengaturan({
+        ...pengaturan,
+        theme: {
+          churchNameCustom: themeForm.churchNameCustom,
+          logoUrlCustom: themeForm.logoUrlCustom,
+          bannerUrlCustom: themeForm.bannerUrlCustom,
+          welcomeTitle: themeForm.welcomeTitle,
+          welcomeSubtitle: themeForm.welcomeSubtitle,
+          primaryColor: themeForm.primaryColor as any,
+          backgroundStyle: themeForm.backgroundStyle as any,
+          cardStyle: themeForm.cardStyle as any,
+          layoutStyle: themeForm.layoutStyle as any,
+          buttonRadius: themeForm.buttonRadius as any
+        }
+      });
+
+      if (themeForm.churchNameCustom || themeForm.logoUrlCustom || themeForm.bannerUrlCustom) {
+        await ApiService.updateGereja(gereja.id, {
+          name: themeForm.churchNameCustom || gereja.name,
+          logoUrl: themeForm.logoUrlCustom || gereja.logoUrl,
+          bannerUrl: themeForm.bannerUrlCustom || gereja.bannerUrl
+        });
+      }
+
+      onShowToast('🎨 Kustomisasi Tampilan Dashboard Jemaat Berhasil Disimpan & Tersinkron Realtime!', 'success');
+      onRefreshData();
+    } catch (err) {
+      alert('Gagal menyimpan pengaturan tema');
+    } finally {
+      setIsSavingTheme(false);
+    }
+  };
 
   // --- HANDLERS ---
   const handleCreateBerita = async (e: React.FormEvent) => {
@@ -1178,60 +1234,350 @@ export const AdminGerejaView: React.FC<AdminGerejaViewProps> = ({
         </div>
       )}
 
-      {/* --- TAB 13: GOOGLE SHEETS & DRIVE API SYNC --- */}
+      {/* --- TAB 13: PENGATURAN SISTEM & CUSTOM TAMPILAN JEMAAT --- */}
       {activeAdminTab === 'pengaturan' && (
-        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6 max-w-3xl mx-auto">
-          <div>
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-600" /> Integrasi Google Sheets API & Google Drive API
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Seluruh data CRUD (Jemaat, Kas, Warta, Event) otomatis tersinkron ke Spreadsheet & Cloud Drive Folder secara realtime.
-            </p>
+        <div className="space-y-8 max-w-5xl mx-auto pb-12">
+          {/* SECTION 1: CUSTOM TAMPILAN DASHBOARD JEMAAT */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-lg space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 pb-5">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                  <Palette className="w-6 h-6 text-amber-500" /> Kustomisasi Tampilan Dashboard Jemaat
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Atur tema, warna, logo, background, banner, dan gaya visual kartu agar tampilan aplikasi jemaat menarik, variatif, dan tidak membosankan.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onPreviewJemaatTab}
+                className="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-amber-400 font-extrabold text-xs rounded-2xl border border-blue-200 dark:border-blue-800 flex items-center gap-2 hover:bg-blue-100 transition-colors cursor-pointer shrink-0"
+              >
+                <Smartphone className="w-4 h-4" /> Buka Simulator HP Jemaat
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTheme} className="space-y-8">
+              {/* 1. IDENTITAS & BRANDING GEREJA */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4" /> Identitas & Banner Hero Utama
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                      Nama Gereja Publik
+                    </label>
+                    <input
+                      type="text"
+                      value={themeForm.churchNameCustom}
+                      onChange={(e) => setThemeForm({ ...themeForm, churchNameCustom: e.target.value })}
+                      placeholder="Contoh: HKBP Grace City Jakarta"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                      URL Logo Gereja
+                    </label>
+                    <input
+                      type="text"
+                      value={themeForm.logoUrlCustom}
+                      onChange={(e) => setThemeForm({ ...themeForm, logoUrlCustom: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                      Judul Banner Teks (Welcome Title)
+                    </label>
+                    <input
+                      type="text"
+                      value={themeForm.welcomeTitle}
+                      onChange={(e) => setThemeForm({ ...themeForm, welcomeTitle: e.target.value })}
+                      placeholder="Selamat Datang di Rumah Tuhan"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                      Subjudul Banner Teks (Subtitle)
+                    </label>
+                    <input
+                      type="text"
+                      value={themeForm.welcomeSubtitle}
+                      onChange={(e) => setThemeForm({ ...themeForm, welcomeSubtitle: e.target.value })}
+                      placeholder="Gereja yang Mengasihi, Melayani, dan Bertumbuh Bersama"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                      URL Background Banner Hero Image
+                    </label>
+                    <input
+                      type="text"
+                      value={themeForm.bannerUrlCustom}
+                      onChange={(e) => setThemeForm({ ...themeForm, bannerUrlCustom: e.target.value })}
+                      placeholder="https://images.unsplash.com/photo-1548625361-18349d9c228d?auto=format&fit=crop&w=1200&q=80"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. WARNA UTAMA / ACCENT COLOR */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4" /> Warna Akses Utama (Primary Accent)
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { id: 'blue', label: 'Blue Ocean', bg: 'bg-blue-600', ring: 'ring-blue-500' },
+                    { id: 'amber', label: 'Amber Gold', bg: 'bg-amber-500', ring: 'ring-amber-400' },
+                    { id: 'emerald', label: 'Emerald Grace', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
+                    { id: 'purple', label: 'Royal Purple', bg: 'bg-purple-600', ring: 'ring-purple-500' },
+                    { id: 'indigo', label: 'Indigo Deep', bg: 'bg-indigo-600', ring: 'ring-indigo-500' },
+                    { id: 'rose', label: 'Sunset Rose', bg: 'bg-rose-600', ring: 'ring-rose-500' },
+                    { id: 'teal', label: 'Teal Harmony', bg: 'bg-teal-600', ring: 'ring-teal-500' },
+                    { id: 'slate', label: 'Slate Midnight', bg: 'bg-slate-700', ring: 'ring-slate-500' },
+                  ].map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setThemeForm({ ...themeForm, primaryColor: c.id as any })}
+                      className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                        themeForm.primaryColor === c.id
+                          ? `bg-slate-100 dark:bg-slate-700 border-amber-500 ring-2 ${c.ring} shadow-md`
+                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <span className={`w-5 h-5 rounded-full ${c.bg} shrink-0 shadow-sm flex items-center justify-center text-white text-[10px]`}>
+                        {themeForm.primaryColor === c.id && <Check className="w-3 h-3 stroke-[3]" />}
+                      </span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. ATMOSPHERE / BACKGROUND STYLE */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4" /> Latar Belakang & Atmosfer App (Background Theme)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    { id: 'twilight', name: '🌙 Twilight Dark', desc: 'Sangat nyaman di mata (Dark Slate-Blue)', bg: 'bg-slate-900 border-slate-700 text-white' },
+                    { id: 'clean_light', name: '☀️ Clean Minimalist Light', desc: 'Bersih cerah & modern off-white', bg: 'bg-slate-100 border-slate-300 text-slate-900' },
+                    { id: 'warm_amber', name: '🌾 Warm Amber Cream', desc: 'Hangat, lembut & teduh', bg: 'bg-amber-50 border-amber-200 text-amber-950' },
+                    { id: 'royal_blue', name: '🌊 Royal Samudra', desc: 'Biru elegan & anggun', bg: 'bg-blue-950 border-blue-800 text-blue-50' },
+                    { id: 'emerald_nature', name: '🍃 Emerald Nature', desc: 'Segar & menenangkan hati', bg: 'bg-emerald-950 border-emerald-800 text-emerald-50' },
+                    { id: 'dark_luxury', name: '💎 Dark Luxury Velvet', desc: 'Hitam eksklusif & mewah', bg: 'bg-black border-slate-800 text-slate-100' }
+                  ].map((bgStyle) => (
+                    <button
+                      key={bgStyle.id}
+                      type="button"
+                      onClick={() => setThemeForm({ ...themeForm, backgroundStyle: bgStyle.id as any })}
+                      className={`p-3.5 rounded-2xl border-2 text-left space-y-1 transition-all cursor-pointer ${bgStyle.bg} ${
+                        themeForm.backgroundStyle === bgStyle.id
+                          ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-lg scale-[1.02]'
+                          : 'opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-black text-xs">
+                        <span>{bgStyle.name}</span>
+                        {themeForm.backgroundStyle === bgStyle.id && <Check className="w-4 h-4 text-amber-400" />}
+                      </div>
+                      <p className="text-[11px] opacity-80 leading-snug">{bgStyle.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. GAYA KARTU & BUTTON RADIUS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Eye className="w-4 h-4" /> Gaya Visual Kartu Modul
+                  </h3>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'glassmorphic', label: '✨ Glassmorphism & Transparan Glow' },
+                      { id: 'elevated_shadow', label: '☁️ Elevated Soft Shadow Clean' },
+                      { id: 'bordered_minimal', label: '📐 Bordered Minimalist Modern' },
+                      { id: 'soft_gradient', label: '🌈 Soft Gradient Depth' }
+                    ].map((card) => (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => setThemeForm({ ...themeForm, cardStyle: card.id as any })}
+                        className={`w-full px-4 py-3 rounded-2xl border text-left text-xs font-extrabold flex items-center justify-between transition-all cursor-pointer ${
+                          themeForm.cardStyle === card.id
+                            ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500 font-black'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        <span>{card.label}</span>
+                        {themeForm.cardStyle === card.id && <Check className="w-4 h-4 text-amber-500" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4" /> Radius Sudut Tombol (Button Shape)
+                  </h3>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'rounded_pill', label: '⭕ Full Pill Rounded (rounded-full)' },
+                      { id: 'modern_rounded', label: '🔲 Modern Curved (rounded-2xl)' },
+                      { id: 'square_sleek', label: '⏹️ Sleek Square (rounded-lg)' }
+                    ].map((rad) => (
+                      <button
+                        key={rad.id}
+                        type="button"
+                        onClick={() => setThemeForm({ ...themeForm, buttonRadius: rad.id as any })}
+                        className={`w-full px-4 py-3 rounded-2xl border text-left text-xs font-extrabold flex items-center justify-between transition-all cursor-pointer ${
+                          themeForm.buttonRadius === rad.id
+                            ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500 font-black'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        <span>{rad.label}</span>
+                        {themeForm.buttonRadius === rad.id && <Check className="w-4 h-4 text-amber-500" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* LIVE MINI PREVIEW CARD */}
+              <div className="p-5 bg-slate-900 rounded-3xl border border-slate-700 space-y-3">
+                <div className="flex items-center justify-between text-xs text-amber-400 font-extrabold">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" /> LIVE PREVIEW SIMULASI TAMPILAN JEMAAT
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Realtime Sync Target</span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-800 border border-slate-700 text-white space-y-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={themeForm.logoUrlCustom || gereja.logoUrl}
+                      alt="Logo Preview"
+                      className="w-10 h-10 rounded-full border border-amber-400 object-cover shadow"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = gereja.logoUrl;
+                      }}
+                    />
+                    <div>
+                      <h4 className="font-black text-sm text-amber-300">
+                        {themeForm.churchNameCustom || gereja.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-300">
+                        {themeForm.welcomeTitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed italic">
+                    "{themeForm.welcomeSubtitle}"
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      className={`px-3 py-1.5 text-xs font-black text-slate-950 bg-amber-500 shadow ${
+                        themeForm.buttonRadius === 'rounded_pill'
+                          ? 'rounded-full'
+                          : themeForm.buttonRadius === 'square_sleek'
+                          ? 'rounded-md'
+                          : 'rounded-xl'
+                      }`}
+                    >
+                      Tombol Utama Preview
+                    </button>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-1 rounded-full border border-emerald-700">
+                      Aksen Warna: {themeForm.primaryColor.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSavingTheme}
+                className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
+              >
+                <Palette className="w-5 h-5" />
+                {isSavingTheme ? 'Menyimpan & Menyinkronkan Tampilan...' : 'Simpan & Terapkan ke Dashboard Jemaat Sekarang'}
+              </button>
+            </form>
           </div>
 
-          <div className="space-y-4">
+          {/* SECTION 2: GOOGLE SHEETS & DRIVE API INTEGRASI */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-lg space-y-6">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Google Sheets Spreadsheet ID
-              </label>
-              <input
-                type="text"
-                value={sheetIdInput}
-                onChange={(e) => setSheetIdInput(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-mono text-slate-900 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Google Drive Root Folder ID
-              </label>
-              <input
-                type="text"
-                value={driveFolderInput}
-                onChange={(e) => setDriveFolderInput(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-mono text-slate-900 dark:text-white"
-              />
-            </div>
-
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs space-y-1">
-              <p className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1">
-                <CheckCircle className="w-4 h-4 text-emerald-600" /> Status Koneksi: TERHUBUNG REALTIME
-              </p>
-              <p className="text-slate-600 dark:text-slate-300">
-                20 Sheet Terbuat: users, gereja, jemaat, berita, pengumuman, renungan, event, jadwal_ibadah, pelayanan, galeri, pokok_doa, donasi, kas, dll.
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" /> Integrasi Cloud Database & Google Sheets API
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Seluruh data CRUD (Jemaat, Kas, Warta, Event) tersinkronisasi otomatis secara realtime ke Spreadsheet & Cloud Storage.
               </p>
             </div>
 
-            <button
-              onClick={handleGoogleSheetsSync}
-              disabled={syncing}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Menyinkronkan Data...' : 'Uji & Sinkronkan Sekarang'}
-            </button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Google Sheets Spreadsheet ID
+                </label>
+                <input
+                  type="text"
+                  value={sheetIdInput}
+                  onChange={(e) => setSheetIdInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-mono text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Google Drive Root Folder ID
+                </label>
+                <input
+                  type="text"
+                  value={driveFolderInput}
+                  onChange={(e) => setDriveFolderInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl text-xs font-mono text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs space-y-1">
+                <p className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" /> Status Koneksi Cloud: TERHUBUNG REALTIME
+                </p>
+                <p className="text-slate-600 dark:text-slate-300">
+                  20 Sheet Terbuat: users, gereja, jemaat, berita, pengumuman, renungan, event, jadwal_ibadah, pelayanan, galeri, pokok_doa, donasi, kas, dll.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleSheetsSync}
+                disabled={syncing}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Menyinkronkan Data...' : 'Uji & Sinkronkan Google Sheets API'}
+              </button>
+            </div>
           </div>
         </div>
       )}

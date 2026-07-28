@@ -64,6 +64,7 @@ interface JemaatViewProps {
   donasiList: Donasi[];
   kasData: { items: Kas[]; summary: { totalPemasukan: number; totalPengeluaran: number; saldoAkhir: number } };
   currentUser: UserType;
+  pengaturan?: Pengaturan;
   onRefreshData: () => void;
   onShowToast: (msg: string, type?: 'success' | 'info') => void;
 }
@@ -83,12 +84,38 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
   donasiList,
   kasData,
   currentUser,
+  pengaturan,
   onRefreshData,
   onShowToast
 }) => {
   const [activeTab, setActiveTab] = useState<
     'beranda' | 'jadwal' | 'renungan' | 'event' | 'donasi' | 'pelayanan' | 'struktur' | 'galeri' | 'doa' | 'profil'
   >('beranda');
+
+  // --- Dynamic Theme Customization derived from Pengaturan ---
+  const theme = pengaturan?.theme;
+  const churchName = theme?.churchNameCustom || gereja.name;
+  const logoUrl = theme?.logoUrlCustom || gereja.logoUrl;
+  const bannerUrl = theme?.bannerUrlCustom || gereja.bannerUrl;
+  const welcomeTitle = theme?.welcomeTitle || 'Selamat Datang di Rumah Tuhan';
+  const welcomeSubtitle = theme?.welcomeSubtitle || gereja.address;
+
+  // Theme Radius & Card Classes
+  const btnRadiusClass =
+    theme?.buttonRadius === 'rounded_pill'
+      ? 'rounded-full'
+      : theme?.buttonRadius === 'square_sleek'
+      ? 'rounded-lg'
+      : 'rounded-2xl';
+
+  const cardStyleClass =
+    theme?.cardStyle === 'elevated_shadow'
+      ? 'bg-white dark:bg-slate-800 shadow-2xl border border-slate-100 dark:border-slate-700 rounded-3xl'
+      : theme?.cardStyle === 'bordered_minimal'
+      ? 'bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-none rounded-3xl'
+      : theme?.cardStyle === 'soft_gradient'
+      ? 'bg-gradient-to-br from-slate-900 via-slate-850 to-slate-800 text-white border border-slate-700 rounded-3xl shadow-lg'
+      : 'bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg rounded-3xl';
 
   // Modals & Active selections
   const [selectedRenungan, setSelectedRenungan] = useState<Renungan | null>(null);
@@ -214,20 +241,36 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
       {activeTab === 'beranda' && (
         <div className="space-y-6 animate-fadeIn">
           {/* Church Banner Hero */}
-          <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800 bg-slate-900 group">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-slate-900 group">
             <img
-              src={gereja.bannerUrl}
-              alt={gereja.name}
-              className="w-full h-52 sm:h-64 object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+              src={bannerUrl}
+              alt={churchName}
+              className="w-full h-56 sm:h-72 object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = gereja.bannerUrl;
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent p-6 flex flex-col justify-end">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/90 backdrop-blur-md text-slate-950 font-bold text-xs rounded-full w-fit mb-2">
-                <Sparkles className="w-3.5 h-3.5" /> Selamat Datang di Rumah Tuhan
+              <div className="flex items-center gap-3 mb-2">
+                <img
+                  src={logoUrl}
+                  alt="Logo Gereja"
+                  className="w-12 h-12 rounded-full border-2 border-amber-400 object-cover shadow-lg shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = gereja.logoUrl;
+                  }}
+                />
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-amber-500/90 backdrop-blur-md text-slate-950 font-bold text-[11px] rounded-full w-fit">
+                    <Sparkles className="w-3 h-3" /> {welcomeTitle}
+                  </div>
+                  <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight mt-1">{churchName}</h1>
+                </div>
               </div>
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">{gereja.name}</h1>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>{gereja.address}</span>
+
+              <p className="text-xs sm:text-sm text-slate-200 mt-1 flex items-center gap-1.5 font-medium">
+                <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>{welcomeSubtitle}</span>
               </p>
               <p className="text-xs text-amber-200/90 font-medium mt-1">
                 Gembala Sidang: <span className="font-bold text-white">{gereja.pastorName}</span>

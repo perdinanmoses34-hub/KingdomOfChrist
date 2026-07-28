@@ -226,6 +226,19 @@ export interface Notifikasi {
   createdAt: string;
 }
 
+export interface ThemeCustomization {
+  primaryColor?: 'blue' | 'amber' | 'emerald' | 'purple' | 'indigo' | 'rose' | 'teal' | 'slate';
+  backgroundStyle?: 'twilight' | 'clean_light' | 'warm_amber' | 'royal_blue' | 'emerald_nature' | 'dark_luxury';
+  cardStyle?: 'glassmorphic' | 'elevated_shadow' | 'bordered_minimal' | 'soft_gradient';
+  layoutStyle?: 'modern_cards' | 'classic_compact' | 'visual_grid' | 'editorial_hero';
+  welcomeTitle?: string;
+  welcomeSubtitle?: string;
+  buttonRadius?: 'rounded_pill' | 'modern_rounded' | 'square_sleek';
+  churchNameCustom?: string;
+  logoUrlCustom?: string;
+  bannerUrlCustom?: string;
+}
+
 export interface Pengaturan {
   id: string;
   gerejaId: string;
@@ -238,6 +251,7 @@ export interface Pengaturan {
   googleApiConnected: boolean;
   googleSheetUrl?: string;
   googleDriveFolderUrl?: string;
+  theme?: ThemeCustomization;
 }
 
 export interface LogAktivitas {

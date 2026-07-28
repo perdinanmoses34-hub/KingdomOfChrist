@@ -666,6 +666,28 @@ export class ApiService {
     );
   }
 
+  static async updateGereja(id: string, data: Partial<Gereja>): Promise<Gereja> {
+    return requestOrFallback(
+      `/api/gereja/${id}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        if (db.gerejaList) {
+          const idx = db.gerejaList.findIndex((g: Gereja) => g.id === id);
+          if (idx !== -1) {
+            db.gerejaList[idx] = { ...db.gerejaList[idx], ...data };
+          }
+        }
+        saveLocalDb(db);
+        return data as Gereja;
+      }
+    );
+  }
+
   static async syncGoogleSheets(sheetId: string, driveFolderId: string): Promise<any> {
     return requestOrFallback(
       '/api/google-sync',
