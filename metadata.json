@@ -1,0 +1,6 @@
+{
+  "name": "CMS Gereja - Church Management System",
+  "description": "Sistem Informasi & Manajemen Gereja berbasis PWA untuk Jemaat, Admin Gereja, dan Super Admin dengan Sinkronisasi Realtime",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
