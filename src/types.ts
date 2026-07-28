@@ -35,8 +35,8 @@ export interface JemaatMember {
   gerejaId: string;
   userId?: string;
   fullName: string;
-  gender: 'Pria' | 'Wanita';
-  birthDate: string;
+  gender: 'Pria' | 'Wanita' | 'Laki-laki' | 'Perempuan';
+  birthDate?: string;
   address: string;
   phone: string;
   email?: string;
@@ -125,12 +125,14 @@ export interface JadwalIbadah {
 export interface Pelayanan {
   id: string;
   gerejaId: string;
-  category: 'Worship' | 'Multimedia' | 'Singer' | 'Musik' | 'Sekolah Minggu' | 'Diaken' | 'Doa';
+  name?: string;
+  category: 'Worship' | 'Multimedia' | 'Singer' | 'Musik' | 'Sekolah Minggu' | 'Diaken' | 'Doa' | 'Kategorial' | string;
   leaderName: string;
   description: string;
   membersCount: number;
   scheduleInfo: string;
   contactPerson: string;
+  meetingTime?: string;
 }
 
 export interface StrukturOrganisasi {
@@ -142,6 +144,7 @@ export interface StrukturOrganisasi {
   photoUrl: string;
   bio: string;
   contact: string;
+  period?: string;
 }
 
 export interface Galeri {

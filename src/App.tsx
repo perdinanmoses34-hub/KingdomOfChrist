@@ -228,8 +228,8 @@ export default function App() {
 
       {/* Floating Realtime Toast Notification */}
       {toast && (
-        <div className="fixed top-20 right-4 z-50 animate-bounce">
-          <div className="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-2xl border border-blue-500/50 flex items-center gap-3 max-w-md">
+        <div className="fixed top-20 right-4 left-4 sm:left-auto z-50 transition-all duration-300">
+          <div className="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-2xl border border-blue-500/50 flex items-center gap-3 max-w-md mx-auto sm:mx-0">
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             ) : (

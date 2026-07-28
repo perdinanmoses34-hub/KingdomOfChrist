@@ -176,7 +176,7 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
   };
 
   return (
-    <div className="pb-36 sm:pb-28 pt-3 px-3 sm:px-6 max-w-5xl mx-auto overflow-x-hidden">
+    <div className="pb-40 sm:pb-32 pt-3 px-3 sm:px-6 max-w-5xl mx-auto w-full max-w-full overflow-x-hidden">
       {/* Top Mobile Quick Navigation Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar scroll-smooth max-w-full">
         {[
@@ -1197,7 +1197,7 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
       )}
 
       {/* --- MOBILE BOTTOM NAVIGATION BAR --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] px-1 sm:px-4 flex items-center justify-around shadow-[0_-4px_25px_rgba(0,0,0,0.12)]">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pt-2 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-1 sm:px-4 flex items-center justify-around shadow-[0_-4px_25px_rgba(0,0,0,0.15)] min-h-[64px]">
         {[
           { id: 'beranda', label: 'Beranda', icon: Home },
           { id: 'jadwal', label: 'Jadwal', icon: Calendar },
@@ -1218,10 +1218,10 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
                 isActive ? 'text-blue-900 dark:text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
               }`}
             >
-              <div className={`p-1 rounded-xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-950/60' : ''}`}>
+              <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-blue-100 dark:bg-blue-950/80 shadow-xs' : ''}`}>
                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] text-blue-900 dark:text-amber-400' : 'stroke-2'}`} />
               </div>
-              <span className="uppercase tracking-tight text-[10px] font-bold truncate w-full text-center mt-0.5">{item.label}</span>
+              <span className="uppercase tracking-tight text-[10px] sm:text-[11px] font-black truncate w-full text-center mt-0.5">{item.label}</span>
             </button>
           );
         })}

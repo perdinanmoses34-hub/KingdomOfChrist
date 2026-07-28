@@ -51,7 +51,9 @@ import {
   RealtimeSyncMessage
 } from './src/types';
 
-// In-Memory Database Store with Pre-seeded Church Data
+// In-Memory & File-Persistent Database Store with Pre-seeded Church Data
+import fs from 'fs';
+
 const db = {
   gereja: [...initialGerejaList] as Gereja[],
   users: [...initialUsers] as User[],
@@ -75,6 +77,33 @@ const db = {
   logAktivitas: [...initialLogAktivitas] as LogAktivitas[],
   backup: [...initialBackup] as BackupRecord[]
 };
+
+const DB_FILE_PATH = path.join(process.cwd(), 'church_cms_database.json');
+
+function loadDbFromDisk() {
+  try {
+    if (fs.existsSync(DB_FILE_PATH)) {
+      const raw = fs.readFileSync(DB_FILE_PATH, 'utf-8');
+      const loaded = JSON.parse(raw);
+      if (loaded && Array.isArray(loaded.berita)) {
+        Object.assign(db, loaded);
+        console.log('Database loaded successfully from disk persistent store.');
+      }
+    }
+  } catch (err) {
+    console.error('Error loading persistent db from disk:', err);
+  }
+}
+
+function saveDbToDisk() {
+  try {
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(db, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing persistent db to disk:', err);
+  }
+}
+
+loadDbFromDisk();
 
 // SSE Active Connections Array
 const sseClients: { id: string; res: Response; gerejaId?: string }[] = [];
@@ -104,6 +133,7 @@ function addLog(gerejaId: string, userId: string, userName: string, action: stri
     timestamp: new Date().toISOString()
   };
   db.logAktivitas.unshift(newLog);
+  saveDbToDisk();
 }
 
 // Simple JWT Helper using Node Crypto
@@ -614,13 +644,19 @@ async function startServer() {
     res.status(404).json({ success: false, message: 'Donasi tidak ditemukan' });
   });
 
+  app.get('/api/log-aktivitas', (req: Request, res: Response) => {
+    const { gerejaId } = req.query;
+    const items = gerejaId ? db.logAktivitas.filter(l => l.gerejaId === gerejaId) : db.logAktivitas;
+    res.json({ success: true, data: items });
+  });
+
   app.get('/api/kas', (req: Request, res: Response) => {
     const { gerejaId } = req.query;
     const items = gerejaId ? db.kas.filter(k => k.gerejaId === gerejaId) : db.kas;
     const totalPemasukan = items.filter(i => i.type === 'pemasukan').reduce((acc, c) => acc + c.amount, 0);
     const totalPengeluaran = items.filter(i => i.type === 'pengeluaran').reduce((acc, c) => acc + c.amount, 0);
     const saldoAkhir = totalPemasukan - totalPengeluaran;
-    res.json({ success: true, data: items, summary: { totalPemasukan, totalPengeluaran, saldoAkhir } });
+    res.json({ success: true, data: { items, summary: { totalPemasukan, totalPengeluaran, saldoAkhir } } });
   });
 
   app.post('/api/kas', (req: Request, res: Response) => {

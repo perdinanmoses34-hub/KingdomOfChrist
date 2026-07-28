@@ -743,6 +743,8 @@ export class ApiService {
           leaderName: data.leaderName || 'Koordinator',
           description: data.description || '',
           membersCount: 1,
+          scheduleInfo: data.scheduleInfo || 'Mingguan',
+          contactPerson: data.contactPerson || '-',
           meetingTime: data.meetingTime || 'Setiap Minggu'
         };
         db.pelayanan = [newItem, ...(db.pelayanan || [])];
@@ -778,7 +780,9 @@ export class ApiService {
           position: data.position || 'Pengurus',
           photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
           period: data.period || '2024-2027',
-          level: data.level || 2
+          level: data.level || 2,
+          bio: data.bio || '',
+          contact: data.contact || ''
         };
         db.strukturOrganisasi = [newItem, ...(db.strukturOrganisasi || [])];
         saveLocalDb(db);

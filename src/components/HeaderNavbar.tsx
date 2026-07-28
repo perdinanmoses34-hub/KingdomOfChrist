@@ -115,7 +115,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
               {/* Church Selector Modal/Dropdown */}
               {isChurchDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-72 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+                <div className="fixed sm:absolute top-16 sm:top-full left-2 sm:left-0 mt-1 w-72 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                     Pilih Gereja (Multi-Tenant)
                   </div>
@@ -146,11 +146,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
             <div className="hidden xs:flex items-center gap-1.5 text-[10px] text-blue-200 uppercase tracking-wider font-semibold">
               <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <Wifi className="w-2.5 h-2.5" /> Realtime
-              </span>
-              <span>•</span>
-              <span className="font-extrabold text-amber-400">
-                PWA
+                <Wifi className="w-2.5 h-2.5" /> Realtime Sync Active
               </span>
             </div>
           </div>
@@ -233,7 +229,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
             </button>
 
             {isRoleDropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+              <div className="fixed sm:absolute top-16 sm:top-full right-2 sm:right-0 mt-1 w-52 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                 <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                   Simulasi Hak Akses Role
                 </div>
