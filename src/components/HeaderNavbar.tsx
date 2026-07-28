@@ -78,12 +78,12 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1.5 sm:gap-2">
         {/* Left Branding */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="relative shrink-0">
             {selectedGereja?.logoUrl ? (
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md">
                 <img
                   src={selectedGereja.logoUrl}
                   alt={selectedGereja.name}
@@ -91,29 +91,31 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                 />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-white text-blue-900 flex items-center justify-center shadow-md font-bold">
-                <Church className="w-6 h-6 text-blue-900" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-blue-900 flex items-center justify-center shadow-md font-bold">
+                <Church className="w-5 h-5 sm:w-6 sm:h-6 text-blue-900" />
               </div>
             )}
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 sm:h-3.5 sm:w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-blue-900"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-emerald-500 border-2 border-blue-900"></span>
             </span>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="relative">
               <button
                 onClick={() => setIsChurchDropdownOpen(!isChurchDropdownOpen)}
-                className="flex items-center gap-1.5 font-black text-white text-sm sm:text-base tracking-wide hover:text-amber-300 transition-colors text-left cursor-pointer"
+                className="flex items-center gap-1 font-black text-white text-xs sm:text-base tracking-wide hover:text-amber-300 transition-colors text-left cursor-pointer max-w-full"
               >
-                <span className="line-clamp-1 uppercase tracking-wider">{selectedGereja ? selectedGereja.name : 'CMS Gereja'}</span>
-                <ChevronDown className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-none truncate uppercase tracking-wider block">
+                  {selectedGereja ? selectedGereja.name : 'CMS Gereja'}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
               </button>
 
               {/* Church Selector Modal/Dropdown */}
               {isChurchDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+                <div className="absolute top-full left-0 mt-2 w-72 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                     Pilih Gereja (Multi-Tenant)
                   </div>
@@ -129,26 +131,26 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <Building2 className="w-4 h-4 text-amber-500" />
+                        <Building2 className="w-4 h-4 text-amber-500 shrink-0" />
                         <div className="truncate">
-                          <div className="font-bold text-xs sm:text-sm">{g.name}</div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">{g.city}</div>
+                          <div className="font-bold text-xs sm:text-sm truncate">{g.name}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{g.city}</div>
                         </div>
                       </div>
-                      {selectedGereja?.id === g.id && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
+                      {selectedGereja?.id === g.id && <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] text-blue-200 uppercase tracking-wider font-semibold">
+            <div className="hidden xs:flex items-center gap-1.5 text-[10px] text-blue-200 uppercase tracking-wider font-semibold">
               <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <Wifi className="w-3 h-3" /> Realtime Sync
+                <Wifi className="w-2.5 h-2.5" /> Realtime
               </span>
               <span>•</span>
               <span className="font-extrabold text-amber-400">
-                PWA Ready
+                PWA
               </span>
             </div>
           </div>
@@ -185,16 +187,16 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
         )}
 
         {/* Right Controls & Role Switcher */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
           {/* Notifications Bell */}
           <button
             onClick={onOpenNotifModal}
-            className="relative p-2 text-blue-100 hover:bg-blue-800/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+            className="relative p-1.5 sm:p-2 text-blue-100 hover:bg-blue-800/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Notifikasi Realtime"
           >
-            <Bell className="w-5 h-5 text-amber-300" />
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white font-black text-[10px] rounded-full flex items-center justify-center animate-bounce">
+              <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-red-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-bounce">
                 {unreadCount}
               </span>
             )}
@@ -203,17 +205,17 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
           {/* Theme Toggle */}
           <button
             onClick={onToggleDarkMode}
-            className="p-2 text-blue-100 hover:bg-blue-800/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 text-blue-100 hover:bg-blue-800/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Ganti Tema Dark/Light"
           >
-            {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-amber-300" />}
+            {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />}
           </button>
 
           {/* Role Switcher Pill */}
           <div className="relative">
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-extrabold text-xs border shadow-sm transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-extrabold text-xs border shadow-sm transition-all cursor-pointer ${
                 currentRole === 'super_admin'
                   ? 'bg-purple-600 text-white border-purple-400'
                   : currentRole === 'admin_gereja'
@@ -221,17 +223,17 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                   : 'bg-white text-blue-950 border-white font-black'
               }`}
             >
-              {currentRole === 'super_admin' && <Shield className="w-4 h-4" />}
-              {currentRole === 'admin_gereja' && <Building2 className="w-4 h-4" />}
-              {currentRole === 'jemaat' && <UserCheck className="w-4 h-4 text-blue-900" />}
-              <span className="uppercase tracking-wider text-[11px]">
-                {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'admin_gereja' ? 'Admin Gereja' : 'Jemaat'}
+              {currentRole === 'super_admin' && <Shield className="w-3.5 h-3.5 shrink-0" />}
+              {currentRole === 'admin_gereja' && <Building2 className="w-3.5 h-3.5 shrink-0" />}
+              {currentRole === 'jemaat' && <UserCheck className="w-3.5 h-3.5 text-blue-900 shrink-0" />}
+              <span className="uppercase tracking-wider text-[10px] sm:text-[11px] whitespace-nowrap">
+                {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'admin_gereja' ? 'Admin' : 'Jemaat'}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+              <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-80 shrink-0" />
             </button>
 
             {isRoleDropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+              <div className="absolute right-0 top-full mt-2 w-52 max-w-[calc(100vw-1rem)] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                 <div className="px-3 py-1.5 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                   Simulasi Hak Akses Role
                 </div>
@@ -244,7 +246,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                     currentRole === 'jemaat' ? 'font-bold text-blue-900 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <UserCheck className="w-4 h-4 text-blue-600" />
+                  <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
                   <span>Jemaat / Member</span>
                 </button>
                 <button
@@ -256,7 +258,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                     currentRole === 'admin_gereja' ? 'font-bold text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <Building2 className="w-4 h-4 text-amber-600" />
+                  <Building2 className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Admin Gereja</span>
                 </button>
                 <button
@@ -268,7 +270,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                     currentRole === 'super_admin' ? 'font-bold text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >
-                  <Shield className="w-4 h-4 text-purple-600" />
+                  <Shield className="w-4 h-4 text-purple-600 shrink-0" />
                   <span>Super Admin (SaaS)</span>
                 </button>
               </div>

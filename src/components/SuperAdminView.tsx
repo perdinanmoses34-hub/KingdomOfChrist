@@ -79,7 +79,7 @@ export const SuperAdminView: React.FC<SuperAdminViewProps> = ({
   };
 
   return (
-    <div className="py-6 px-3 sm:px-6 max-w-7xl mx-auto space-y-6">
+    <div className="py-6 px-3 sm:px-6 max-w-7xl mx-auto space-y-6 overflow-x-hidden w-full max-w-full">
       {/* Super Admin Banner */}
       <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl border border-purple-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

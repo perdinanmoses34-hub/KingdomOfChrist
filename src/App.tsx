@@ -4,6 +4,7 @@ import { JemaatView } from './components/JemaatView';
 import { AdminGerejaView } from './components/AdminGerejaView';
 import { SuperAdminView } from './components/SuperAdminView';
 import { ApiService } from './services/api';
+import { initialGerejaList } from './mockData';
 import {
   UserRole,
   Gereja,
@@ -26,16 +27,16 @@ import {
   LogAktivitas,
   RealtimeSyncMessage
 } from './types';
-import { Sparkles, Bell, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Sparkles, Bell, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function App() {
   const [currentRole, setCurrentRole] = useState<UserRole>('jemaat');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [viewportMode, setViewportMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
-  // Multi-Tenant State
-  const [gerejaList, setGerejaList] = useState<Gereja[]>([]);
-  const [selectedGereja, setSelectedGereja] = useState<Gereja | null>(null);
+  // Multi-Tenant State (pre-populated with initial fallback data so no blank screen on boot)
+  const [gerejaList, setGerejaList] = useState<Gereja[]>(initialGerejaList);
+  const [selectedGereja, setSelectedGereja] = useState<Gereja | null>(initialGerejaList[0] || null);
 
   // Resource States
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
@@ -149,13 +150,17 @@ export default function App() {
     }
   };
 
-  // On Mount: Load Churches List
+  // On Mount: Load Initial Data & Churches List
   useEffect(() => {
+    if (initialGerejaList.length > 0) {
+      loadChurchData(initialGerejaList[0].id);
+    }
+
     ApiService.getGerejaList()
       .then((list) => {
-        const validList = list && list.length > 0 ? list : [];
+        const validList = list && list.length > 0 ? list : initialGerejaList;
         setGerejaList(validList);
-        if (validList.length > 0) {
+        if (!selectedGereja && validList.length > 0) {
           setSelectedGereja(validList[0]);
           loadChurchData(validList[0].id);
         }
@@ -192,7 +197,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'}`}>
+    <div className={`min-h-screen overflow-x-hidden w-full max-w-full transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'}`}>
       {/* Top Navbar Header */}
       <HeaderNavbar
         currentRole={currentRole}
@@ -334,8 +339,9 @@ export default function App() {
             )}
           </>
         ) : (
-          <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="animate-spin text-blue-600 font-bold text-lg">Memuat Data Gereja...</div>
+          <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 p-4">
+            <Loader2 className="w-8 h-8 text-blue-600 dark:text-amber-400 animate-spin" />
+            <span className="text-slate-600 dark:text-slate-300 font-bold text-sm">Memuat Data Gereja...</span>
           </div>
         )}
       </main>

@@ -176,9 +176,9 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
   };
 
   return (
-    <div className="pb-24 pt-4 px-3 sm:px-6 max-w-5xl mx-auto">
+    <div className="pb-36 sm:pb-28 pt-3 px-3 sm:px-6 max-w-5xl mx-auto overflow-x-hidden">
       {/* Top Mobile Quick Navigation Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar scroll-smooth">
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar scroll-smooth max-w-full">
         {[
           { id: 'beranda', label: 'Beranda', icon: Home },
           { id: 'jadwal', label: 'Jadwal', icon: Calendar },
@@ -1197,7 +1197,7 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
       )}
 
       {/* --- MOBILE BOTTOM NAVIGATION BAR --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t-2 border-slate-200 dark:border-slate-800 py-2.5 px-3 flex items-center justify-around shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] px-1 sm:px-4 flex items-center justify-around shadow-[0_-4px_25px_rgba(0,0,0,0.12)]">
         {[
           { id: 'beranda', label: 'Beranda', icon: Home },
           { id: 'jadwal', label: 'Jadwal', icon: Calendar },
@@ -1210,13 +1210,18 @@ export const JemaatView: React.FC<JemaatViewProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              className={`flex flex-col items-center gap-0.5 text-[11px] font-extrabold transition-transform active:scale-95 cursor-pointer ${
-                isActive ? 'text-blue-900 dark:text-amber-400 font-black' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700'
+              onClick={() => {
+                setActiveTab(item.id as any);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`flex-1 py-1 px-0.5 flex flex-col items-center justify-center min-w-0 transition-transform active:scale-95 cursor-pointer ${
+                isActive ? 'text-blue-900 dark:text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] text-blue-900 dark:text-amber-400' : 'stroke-2'}`} />
-              <span className="uppercase tracking-wider text-[10px]">{item.label}</span>
+              <div className={`p-1 rounded-xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-950/60' : ''}`}>
+                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] text-blue-900 dark:text-amber-400' : 'stroke-2'}`} />
+              </div>
+              <span className="uppercase tracking-tight text-[10px] font-bold truncate w-full text-center mt-0.5">{item.label}</span>
             </button>
           );
         })}
