@@ -20,323 +20,725 @@ import {
   BackupRecord,
   RealtimeSyncMessage
 } from '../types';
+import {
+  initialGerejaList,
+  initialUsers,
+  initialJemaat,
+  initialBerita,
+  initialPengumuman,
+  initialRenungan,
+  initialEvents,
+  initialRegistrations,
+  initialJadwalIbadah,
+  initialPelayanan,
+  initialStrukturOrganisasi,
+  initialAlbums,
+  initialGaleri,
+  initialKomentar,
+  initialPokokDoa,
+  initialDonasi,
+  initialKas,
+  initialNotifikasi,
+  initialPengaturan,
+  initialLogAktivitas,
+  initialBackup
+} from '../mockData';
+
+// Local storage key for client-side fallback (GitHub Pages / Offline mode)
+const STORAGE_KEY = 'cms_gereja_db_v1';
+
+function getLocalDb() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('Error reading localStorage DB:', e);
+  }
+  
+  const defaultDb = {
+    gereja: [...initialGerejaList],
+    users: [...initialUsers],
+    jemaat: [...initialJemaat],
+    berita: [...initialBerita],
+    pengumuman: [...initialPengumuman],
+    renungan: [...initialRenungan],
+    events: [...initialEvents],
+    registrations: [...initialRegistrations],
+    jadwalIbadah: [...initialJadwalIbadah],
+    pelayanan: [...initialPelayanan],
+    strukturOrganisasi: [...initialStrukturOrganisasi],
+    albums: [...initialAlbums],
+    galeri: [...initialGaleri],
+    komentar: [...initialKomentar],
+    pokokDoa: [...initialPokokDoa],
+    donasi: [...initialDonasi],
+    kas: [...initialKas],
+    notifikasi: [...initialNotifikasi],
+    pengaturan: { ...initialPengaturan },
+    logAktivitas: [...initialLogAktivitas],
+    backup: [...initialBackup]
+  };
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultDb));
+  } catch (e) {}
+
+  return defaultDb;
+}
+
+function saveLocalDb(db: any) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  } catch (e) {
+    console.error('Error saving to localStorage DB:', e);
+  }
+}
+
+async function requestOrFallback<T>(
+  url: string,
+  options?: RequestInit,
+  fallbackFn?: () => T | Promise<T>
+): Promise<T> {
+  try {
+    const res = await fetch(url, options);
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const json = await res.json();
+      if (json && json.success !== false) {
+        return json.data !== undefined ? json.data : json;
+      }
+    }
+  } catch (err) {
+    // API endpoint unreachable (e.g., static hosting on GitHub Pages)
+  }
+
+  if (fallbackFn) {
+    return await fallbackFn();
+  }
+  throw new Error(`Failed API request for ${url}`);
+}
 
 export class ApiService {
-  private static baseUrl = '';
-
   static async getGerejaList(): Promise<Gereja[]> {
-    const res = await fetch('/api/gereja');
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback('/api/gereja', undefined, () => {
+      const db = getLocalDb();
+      return db.gereja || initialGerejaList;
+    });
   }
 
   static async getBerita(gerejaId?: string): Promise<Berita[]> {
     const url = gerejaId ? `/api/berita?gerejaId=${gerejaId}` : '/api/berita';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.berita || initialBerita;
+      return gerejaId ? list.filter((b: Berita) => b.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createBerita(data: Partial<Berita>): Promise<Berita> {
-    const res = await fetch('/api/berita', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/berita',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Berita = {
+          id: `ber-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || 'Berita Baru',
+          content: data.content || '',
+          coverUrl: data.coverUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80',
+          category: data.category || 'Umum',
+          tags: data.tags || [],
+          publishDate: new Date().toISOString(),
+          published: data.published ?? true,
+          viewsCount: 0,
+          authorName: data.authorName || 'Admin Gereja'
+        };
+        db.berita = [newItem, ...(db.berita || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async deleteBerita(id: string): Promise<boolean> {
-    const res = await fetch(`/api/berita/${id}`, { method: 'DELETE' });
-    const json = await res.json();
-    return json.success;
+    return requestOrFallback(
+      `/api/berita/${id}`,
+      { method: 'DELETE' },
+      () => {
+        const db = getLocalDb();
+        db.berita = (db.berita || []).filter((b: Berita) => b.id !== id);
+        saveLocalDb(db);
+        return true;
+      }
+    );
   }
 
   static async getPengumuman(gerejaId?: string): Promise<Pengumuman[]> {
     const url = gerejaId ? `/api/pengumuman?gerejaId=${gerejaId}` : '/api/pengumuman';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.pengumuman || initialPengumuman;
+      return gerejaId ? list.filter((p: Pengumuman) => p.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createPengumuman(data: Partial<Pengumuman>): Promise<Pengumuman> {
-    const res = await fetch('/api/pengumuman', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/pengumuman',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Pengumuman = {
+          id: `peng-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || '',
+          content: data.content || '',
+          priority: data.priority || 'normal',
+          publishDate: new Date().toISOString(),
+          targetAudience: data.targetAudience || 'Seluruh Jemaat'
+        };
+        db.pengumuman = [newItem, ...(db.pengumuman || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async deletePengumuman(id: string): Promise<boolean> {
-    const res = await fetch(`/api/pengumuman/${id}`, { method: 'DELETE' });
-    const json = await res.json();
-    return json.success;
+    return requestOrFallback(`/api/pengumuman/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.pengumuman = (db.pengumuman || []).filter((p: Pengumuman) => p.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
   }
 
   static async getRenungan(gerejaId?: string): Promise<Renungan[]> {
     const url = gerejaId ? `/api/renungan?gerejaId=${gerejaId}` : '/api/renungan';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.renungan || initialRenungan;
+      return gerejaId ? list.filter((r: Renungan) => r.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createRenungan(data: Partial<Renungan>): Promise<Renungan> {
-    const res = await fetch('/api/renungan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/renungan',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Renungan = {
+          id: `ren-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || '',
+          scripture: data.scripture || '',
+          content: data.content || '',
+          videoUrl: data.videoUrl,
+          imageUrl: data.imageUrl,
+          author: data.author || 'Pendeta',
+          publishDate: new Date().toISOString(),
+          likesCount: 0
+        };
+        db.renungan = [newItem, ...(db.renungan || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async likeRenungan(id: string): Promise<number> {
-    const res = await fetch(`/api/renungan/${id}/like`, { method: 'POST' });
-    const json = await res.json();
-    return json.likesCount || 0;
+    return requestOrFallback(`/api/renungan/${id}/like`, { method: 'POST' }, () => {
+      const db = getLocalDb();
+      const item = (db.renungan || []).find((r: Renungan) => r.id === id);
+      if (item) {
+        item.likesCount = (item.likesCount || 0) + 1;
+        saveLocalDb(db);
+        return item.likesCount;
+      }
+      return 1;
+    });
   }
 
   static async deleteRenungan(id: string): Promise<boolean> {
-    const res = await fetch(`/api/renungan/${id}`, { method: 'DELETE' });
-    const json = await res.json();
-    return json.success;
+    return requestOrFallback(`/api/renungan/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.renungan = (db.renungan || []).filter((r: Renungan) => r.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
   }
 
   static async getEvents(gerejaId?: string): Promise<EventGereja[]> {
     const url = gerejaId ? `/api/events?gerejaId=${gerejaId}` : '/api/events';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.events || initialEvents;
+      return gerejaId ? list.filter((e: EventGereja) => e.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createEvent(data: Partial<EventGereja>): Promise<EventGereja> {
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/events',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: EventGereja = {
+          id: `evt-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || '',
+          description: data.description || '',
+          posterUrl: data.posterUrl || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+          locationName: data.locationName || 'Gereja Main Hall',
+          mapUrl: data.mapUrl,
+          date: data.date || new Date().toISOString().split('T')[0],
+          time: data.time || '09:00 - selesai',
+          quota: data.quota || 100,
+          registeredCount: 0,
+          category: data.category || 'Umum'
+        };
+        db.events = [newItem, ...(db.events || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async rsvpEvent(eventId: string, payload: { jemaatName: string; phone: string; email: string; seats: number }): Promise<any> {
-    const res = await fetch(`/api/events/${eventId}/rsvp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    return await res.json();
+    return requestOrFallback(
+      `/api/events/${eventId}/rsvp`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      },
+      () => {
+        const db = getLocalDb();
+        const evt = (db.events || []).find((e: EventGereja) => e.id === eventId);
+        if (evt) {
+          evt.registeredCount = (evt.registeredCount || 0) + (payload.seats || 1);
+        }
+        const newReg = {
+          id: `reg-${Date.now()}`,
+          eventId,
+          jemaatName: payload.jemaatName,
+          phone: payload.phone,
+          email: payload.email,
+          seats: payload.seats,
+          createdAt: new Date().toISOString()
+        };
+        db.registrations = [newReg, ...(db.registrations || [])];
+        saveLocalDb(db);
+        return { success: true, data: newReg };
+      }
+    );
   }
 
   static async deleteEvent(id: string): Promise<boolean> {
-    const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
-    const json = await res.json();
-    return json.success;
+    return requestOrFallback(`/api/events/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.events = (db.events || []).filter((e: EventGereja) => e.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
   }
 
   static async getJadwal(gerejaId?: string): Promise<JadwalIbadah[]> {
     const url = gerejaId ? `/api/jadwal?gerejaId=${gerejaId}` : '/api/jadwal';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.jadwalIbadah || initialJadwalIbadah;
+      return gerejaId ? list.filter((j: JadwalIbadah) => j.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createJadwal(data: Partial<JadwalIbadah>): Promise<JadwalIbadah> {
-    const res = await fetch('/api/jadwal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/jadwal',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: JadwalIbadah = {
+          id: `jad-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || 'Ibadah Raya',
+          category: data.category || 'Ibadah Minggu',
+          dayOfWeek: data.dayOfWeek || 'Minggu',
+          time: data.time || '09:00 - 11:00 WIB',
+          location: data.location || 'Gedung Utama',
+          speaker: data.speaker || 'Pendeta',
+          worshipLeader: data.worshipLeader || 'Tim Worship'
+        };
+        db.jadwalIbadah = [newItem, ...(db.jadwalIbadah || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async getPelayanan(gerejaId?: string): Promise<Pelayanan[]> {
     const url = gerejaId ? `/api/pelayanan?gerejaId=${gerejaId}` : '/api/pelayanan';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.pelayanan || initialPelayanan;
+      return gerejaId ? list.filter((p: Pelayanan) => p.gerejaId === gerejaId) : list;
+    });
   }
 
   static async getStruktur(gerejaId?: string): Promise<StrukturOrganisasi[]> {
     const url = gerejaId ? `/api/struktur?gerejaId=${gerejaId}` : '/api/struktur';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.strukturOrganisasi || initialStrukturOrganisasi;
+      return gerejaId ? list.filter((s: StrukturOrganisasi) => s.gerejaId === gerejaId) : list;
+    });
   }
 
   static async getAlbums(gerejaId?: string): Promise<Album[]> {
     const url = gerejaId ? `/api/albums?gerejaId=${gerejaId}` : '/api/albums';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.albums || initialAlbums;
+      return gerejaId ? list.filter((a: Album) => a.gerejaId === gerejaId) : list;
+    });
   }
 
   static async getGaleri(gerejaId?: string, albumId?: string): Promise<Galeri[]> {
     let url = `/api/galeri?1=1`;
     if (gerejaId) url += `&gerejaId=${gerejaId}`;
     if (albumId) url += `&albumId=${albumId}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      let res = db.galeri || initialGaleri;
+      if (gerejaId) res = res.filter((g: Galeri) => g.gerejaId === gerejaId);
+      if (albumId) res = res.filter((g: Galeri) => g.albumId === albumId);
+      return res;
+    });
   }
 
   static async createGaleri(data: Partial<Galeri>): Promise<Galeri> {
-    const res = await fetch('/api/galeri', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/galeri',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Galeri = {
+          id: `gal-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          albumId: data.albumId || 'alb-001',
+          title: data.title || 'Foto Kegiatan',
+          type: data.type || 'image',
+          url: data.url || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80',
+          createdAt: new Date().toISOString()
+        };
+        db.galeri = [newItem, ...(db.galeri || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async getPokokDoa(gerejaId?: string): Promise<PokokDoa[]> {
     const url = gerejaId ? `/api/pokok-doa?gerejaId=${gerejaId}` : '/api/pokok-doa';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.pokokDoa || initialPokokDoa;
+      return gerejaId ? list.filter((p: PokokDoa) => p.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createPokokDoa(data: Partial<PokokDoa>): Promise<PokokDoa> {
-    const res = await fetch('/api/pokok-doa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/pokok-doa',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: PokokDoa = {
+          id: `doa-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          senderName: data.senderName || 'Anonim',
+          content: data.content || '',
+          status: data.status || 'pending',
+          isPrivate: data.isPrivate || false,
+          createdAt: new Date().toISOString()
+        };
+        db.pokokDoa = [newItem, ...(db.pokokDoa || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async updatePokokDoa(id: string, data: Partial<PokokDoa>): Promise<PokokDoa> {
-    const res = await fetch(`/api/pokok-doa/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      `/api/pokok-doa/${id}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const item = (db.pokokDoa || []).find((p: PokokDoa) => p.id === id);
+        if (item) {
+          Object.assign(item, data);
+          saveLocalDb(db);
+          return item;
+        }
+        return data as PokokDoa;
+      }
+    );
   }
 
   static async getDonasi(gerejaId?: string): Promise<Donasi[]> {
     const url = gerejaId ? `/api/donasi?gerejaId=${gerejaId}` : '/api/donasi';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.donasi || initialDonasi;
+      return gerejaId ? list.filter((d: Donasi) => d.gerejaId === gerejaId) : list;
+    });
   }
 
   static async createDonasi(data: Partial<Donasi>): Promise<Donasi> {
-    const res = await fetch('/api/donasi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/donasi',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Donasi = {
+          id: `don-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          donorName: data.donorName || 'Hamba Allah',
+          amount: data.amount || 0,
+          campaign: data.campaign || 'Persembahan',
+          paymentMethod: data.paymentMethod || 'transfer_bank',
+          transferProofUrl: data.transferProofUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80',
+          status: 'pending',
+          date: new Date().toISOString()
+        };
+        db.donasi = [newItem, ...(db.donasi || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async verifyDonasi(id: string, status: 'verified' | 'rejected'): Promise<Donasi> {
-    const res = await fetch(`/api/donasi/${id}/verify`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      `/api/donasi/${id}/verify`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      },
+      () => {
+        const db = getLocalDb();
+        const item = (db.donasi || []).find((d: Donasi) => d.id === id);
+        if (item) {
+          item.status = status;
+          saveLocalDb(db);
+          return item;
+        }
+        return { id, status } as Donasi;
+      }
+    );
   }
 
   static async getKas(gerejaId?: string): Promise<{ items: Kas[]; summary: { totalPemasukan: number; totalPengeluaran: number; saldoAkhir: number } }> {
     const url = gerejaId ? `/api/kas?gerejaId=${gerejaId}` : '/api/kas';
-    const res = await fetch(url);
-    const json = await res.json();
-    return {
-      items: json.data || [],
-      summary: json.summary || { totalPemasukan: 0, totalPengeluaran: 0, saldoAkhir: 0 }
-    };
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const items = gerejaId ? (db.kas || initialKas).filter((k: Kas) => k.gerejaId === gerejaId) : (db.kas || initialKas);
+      const totalPemasukan = items.filter((k: Kas) => k.type === 'pemasukan').reduce((sum: number, k: Kas) => sum + k.amount, 0);
+      const totalPengeluaran = items.filter((k: Kas) => k.type === 'pengeluaran').reduce((sum: number, k: Kas) => sum + k.amount, 0);
+      return {
+        items,
+        summary: {
+          totalPemasukan,
+          totalPengeluaran,
+          saldoAkhir: totalPemasukan - totalPengeluaran
+        }
+      };
+    });
   }
 
   static async getJemaatMembers(gerejaId?: string): Promise<JemaatMember[]> {
     const url = gerejaId ? `/api/jemaat-members?gerejaId=${gerejaId}` : '/api/jemaat-members';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.jemaat || initialJemaat;
+      return gerejaId ? list.filter((j: JemaatMember) => j.gerejaId === gerejaId) : list;
+    });
   }
 
   static async getNotifikasi(gerejaId?: string): Promise<Notifikasi[]> {
     const url = gerejaId ? `/api/notifikasi?gerejaId=${gerejaId}` : '/api/notifikasi';
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.data || [];
+    return requestOrFallback(url, undefined, () => {
+      const db = getLocalDb();
+      const list = db.notifikasi || initialNotifikasi;
+      return gerejaId ? list.filter((n: Notifikasi) => n.gerejaId === gerejaId) : list;
+    });
   }
 
   static async sendNotifikasi(data: Partial<Notifikasi>): Promise<Notifikasi> {
-    const res = await fetch('/api/notifikasi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/notifikasi',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Notifikasi = {
+          id: `not-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || '',
+          message: data.message || '',
+          type: data.type || 'pengumuman',
+          targetRole: data.targetRole || 'jemaat',
+          createdAt: new Date().toISOString()
+        };
+        db.notifikasi = [newItem, ...(db.notifikasi || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
   }
 
   static async getPengaturan(): Promise<Pengaturan> {
-    const res = await fetch('/api/pengaturan');
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback('/api/pengaturan', undefined, () => {
+      const db = getLocalDb();
+      return db.pengaturan || initialPengaturan;
+    });
   }
 
   static async updatePengaturan(data: Partial<Pengaturan>): Promise<Pengaturan> {
-    const res = await fetch('/api/pengaturan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback(
+      '/api/pengaturan',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        db.pengaturan = { ...db.pengaturan, ...data };
+        saveLocalDb(db);
+        return db.pengaturan;
+      }
+    );
   }
 
   static async syncGoogleSheets(sheetId: string, driveFolderId: string): Promise<any> {
-    const res = await fetch('/api/google-sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sheetId, driveFolderId })
-    });
-    return await res.json();
+    return requestOrFallback(
+      '/api/google-sync',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheetId, driveFolderId })
+      },
+      () => {
+        const db = getLocalDb();
+        db.pengaturan.googleSheetId = sheetId;
+        db.pengaturan.googleDriveFolderId = driveFolderId;
+        db.pengaturan.googleApiConnected = true;
+        saveLocalDb(db);
+        return { success: true, message: 'Simulasi Sinkronisasi Google Sheets Berhasil!' };
+      }
+    );
   }
 
   static async triggerBackup(): Promise<BackupRecord> {
-    const res = await fetch('/api/backup', { method: 'POST' });
-    const json = await res.json();
-    return json.data;
+    return requestOrFallback('/api/backup', { method: 'POST' }, () => {
+      const db = getLocalDb();
+      const newBackup: BackupRecord = {
+        id: `bak-${Date.now()}`,
+        gerejaId: 'ger-001',
+        filename: `backup-${Date.now()}.json`,
+        size: '2.4 MB',
+        createdBy: 'Admin',
+        createdAt: new Date().toISOString()
+      };
+      db.backup = [newBackup, ...(db.backup || [])];
+      saveLocalDb(db);
+      return newBackup;
+    });
   }
 
   static async generateAiContent(prompt: string, type: 'renungan' | 'berita'): Promise<string> {
-    const res = await fetch('/api/gemini/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, type })
-    });
-    const json = await res.json();
-    return json.content;
+    return requestOrFallback(
+      '/api/gemini/generate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, type })
+      },
+      () => {
+        return `[Konten AI Dihasilkan Otomatis]\n\nJudul: ${prompt}\n\nFirman Tuhan mengingatkan kita untuk senantiasa mengandalkan Allah dalam segala waktu dan keadaan. Semoga renungan/berita ini menjadi berkat dan menguatkan iman jemaat sekalian. Amin.`;
+      }
+    );
   }
 
   static subscribeRealtime(gerejaId: string, onMessage: (msg: RealtimeSyncMessage) => void): () => void {
-    const eventSource = new EventSource(`/api/realtime/stream?gerejaId=${gerejaId}`);
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessage(data);
-      } catch (err) {
-        // Ignored
-      }
-    };
+    try {
+      const eventSource = new EventSource(`/api/realtime/stream?gerejaId=${gerejaId}`);
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          onMessage(data);
+        } catch (err) {
+          // Ignored
+        }
+      };
 
-    return () => {
-      eventSource.close();
-    };
+      eventSource.onerror = () => {
+        eventSource.close();
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    } catch (err) {
+      return () => {};
+    }
   }
 }
+

@@ -151,13 +151,18 @@ export default function App() {
 
   // On Mount: Load Churches List
   useEffect(() => {
-    ApiService.getGerejaList().then((list) => {
-      setGerejaList(list);
-      if (list.length > 0) {
-        setSelectedGereja(list[0]);
-        loadChurchData(list[0].id);
-      }
-    });
+    ApiService.getGerejaList()
+      .then((list) => {
+        const validList = list && list.length > 0 ? list : [];
+        setGerejaList(validList);
+        if (validList.length > 0) {
+          setSelectedGereja(validList[0]);
+          loadChurchData(validList[0].id);
+        }
+      })
+      .catch((err) => {
+        console.error('Error in getGerejaList:', err);
+      });
   }, []);
 
   // On Church Selection Change: Load Church Specific Data & Subscribe to Realtime SSE
