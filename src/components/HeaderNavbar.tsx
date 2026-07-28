@@ -11,7 +11,8 @@ import {
   Bell,
   ChevronDown,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 import { UserRole, Gereja, Notifikasi } from '../types';
 
@@ -28,6 +29,8 @@ interface HeaderNavbarProps {
   viewportMode?: 'mobile' | 'tablet' | 'desktop';
   onViewportChange?: (mode: 'mobile' | 'tablet' | 'desktop') => void;
   showViewportToggle?: boolean;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
@@ -42,7 +45,9 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
   onOpenNotifModal,
   viewportMode,
   onViewportChange,
-  showViewportToggle = false
+  showViewportToggle = false,
+  onLogout,
+  userName
 }) => {
   const [isChurchDropdownOpen, setIsChurchDropdownOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -312,6 +317,18 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Logout Button */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-600/90 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+              title="Keluar / Back to Login Screen"
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Keluar</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { HeaderNavbar } from './components/HeaderNavbar';
 import { JemaatView } from './components/JemaatView';
 import { AdminGerejaView } from './components/AdminGerejaView';
 import { SuperAdminView } from './components/SuperAdminView';
+import { LoginScreen } from './components/LoginScreen';
 import { ApiService } from './services/api';
 import { initialGerejaList } from './mockData';
 import {
@@ -30,6 +31,11 @@ import {
 import { Sparkles, Bell, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedAccount, setLoggedAccount] = useState<{ email: string; name: string }>({
+    email: 'jemaat@hkbp.org',
+    name: 'Daniel Sitorus'
+  });
   const [currentRole, setCurrentRole] = useState<UserRole>('jemaat');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [viewportMode, setViewportMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
@@ -69,17 +75,30 @@ export default function App() {
   });
   const [logAktivitas, setLogAktivitas] = useState<LogAktivitas[]>([]);
 
-  // Current logged in mock user
+  // Current logged in user
   const currentUser: User = {
     id: 'usr-1',
-    email: 'jemaat.daniel@gmail.com',
-    name: 'Daniel Sitorus',
+    email: loggedAccount.email,
+    name: loggedAccount.name,
     role: currentRole,
     gerejaId: selectedGereja?.id || 'ger-001',
     phone: '081398765432',
     membershipNo: 'HKBP-2025-088',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
     createdAt: new Date().toISOString()
+  };
+
+  const handleLoginSuccess = (role: UserRole, church: Gereja, userEmail: string, userName: string) => {
+    setCurrentRole(role);
+    setSelectedGereja(church);
+    setLoggedAccount({ email: userEmail, name: userName });
+    setIsLoggedIn(true);
+    showToastMsg(`Selamat datang, ${userName}! Anda berhasil masuk sebagai ${role.toUpperCase().replace('_', ' ')}.`, 'success');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    showToastMsg('Anda telah keluar dari aplikasi.', 'info');
   };
 
   // Toast State
@@ -202,6 +221,15 @@ export default function App() {
     setIsDarkMode(!isDarkMode);
   };
 
+  if (!isLoggedIn) {
+    return (
+      <LoginScreen
+        gerejaList={gerejaList}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen overflow-x-hidden w-full max-w-full transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'}`}>
       {/* Top Navbar Header */}
@@ -224,6 +252,8 @@ export default function App() {
         viewportMode={viewportMode}
         onViewportChange={setViewportMode}
         showViewportToggle={currentRole === 'admin_gereja'}
+        onLogout={handleLogout}
+        userName={currentUser.name}
       />
 
       {/* Floating Realtime Toast Notification */}
