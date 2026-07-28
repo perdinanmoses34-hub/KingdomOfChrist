@@ -523,6 +523,52 @@ async function startServer() {
     res.status(404).json({ success: false, message: 'Pokok doa tidak ditemukan' });
   });
 
+  app.delete('/api/pokok-doa/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.pokokDoa.findIndex(d => d.id === id);
+    if (idx !== -1) {
+      const deleted = db.pokokDoa.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'pokokDoa', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Pokok doa tidak ditemukan' });
+  });
+
+  // --- Pelayanan & Struktur Delete API ---
+  app.delete('/api/pelayanan/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.pelayanan.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      const deleted = db.pelayanan.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'pelayanan', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Pelayanan tidak ditemukan' });
+  });
+
+  app.delete('/api/struktur/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.strukturOrganisasi.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      const deleted = db.strukturOrganisasi.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'struktur', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Struktur tidak ditemukan' });
+  });
+
+  // --- Galeri Delete API ---
+  app.delete('/api/galeri/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.galeri.findIndex(g => g.id === id);
+    if (idx !== -1) {
+      const deleted = db.galeri.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'galeri', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Foto galeri tidak ditemukan' });
+  });
+
   // --- Donasi & Kas API ---
   app.get('/api/donasi', (req: Request, res: Response) => {
     const { gerejaId } = req.query;
@@ -549,7 +595,7 @@ async function startServer() {
     if (don) {
       don.status = status;
       if (status === 'verified') {
-        db.kas.unshift({
+        const kasEntry: Kas = {
           id: `kas-${Date.now()}`,
           gerejaId: don.gerejaId,
           title: `Donasi Online: ${don.campaign} (${don.donorName})`,
@@ -558,7 +604,9 @@ async function startServer() {
           category: 'Donasi Online',
           date: new Date().toISOString().split('T')[0],
           description: `Metode: ${don.paymentMethod}`
-        });
+        };
+        db.kas.unshift(kasEntry);
+        broadcastRealtime({ type: 'INSERT', entity: 'kas', gerejaId: don.gerejaId, data: kasEntry, timestamp: new Date().toISOString() });
       }
       broadcastRealtime({ type: 'UPDATE', entity: 'donasi', gerejaId: don.gerejaId, data: don, timestamp: new Date().toISOString() });
       return res.json({ success: true, data: don });
@@ -573,6 +621,29 @@ async function startServer() {
     const totalPengeluaran = items.filter(i => i.type === 'pengeluaran').reduce((acc, c) => acc + c.amount, 0);
     const saldoAkhir = totalPemasukan - totalPengeluaran;
     res.json({ success: true, data: items, summary: { totalPemasukan, totalPengeluaran, saldoAkhir } });
+  });
+
+  app.post('/api/kas', (req: Request, res: Response) => {
+    const item: Kas = {
+      id: `kas-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      ...req.body
+    };
+    db.kas.unshift(item);
+    addLog(item.gerejaId, 'admin-1', 'Admin Gereja', 'TAMBAH_KAS', `Catatan Kas (${item.type.toUpperCase()}): Rp ${item.amount.toLocaleString('id-ID')} - ${item.title}`);
+    broadcastRealtime({ type: 'INSERT', entity: 'kas', gerejaId: item.gerejaId, data: item, timestamp: new Date().toISOString() });
+    res.json({ success: true, data: item });
+  });
+
+  app.delete('/api/kas/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.kas.findIndex(k => k.id === id);
+    if (idx !== -1) {
+      const deleted = db.kas.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'kas', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Catatan kas tidak ditemukan' });
   });
 
   // --- Jemaat Member Directory API ---
@@ -590,7 +661,20 @@ async function startServer() {
       ...req.body
     };
     db.jemaat.unshift(item);
+    addLog(item.gerejaId, 'admin-1', 'Admin Gereja', 'TAMBAH_JEMAAT', `Mendaftarkan Jemaat Baru: ${item.fullName}`);
+    broadcastRealtime({ type: 'INSERT', entity: 'jemaat', gerejaId: item.gerejaId, data: item, timestamp: new Date().toISOString() });
     res.json({ success: true, data: item });
+  });
+
+  app.delete('/api/jemaat-members/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = db.jemaat.findIndex(j => j.id === id);
+    if (idx !== -1) {
+      const deleted = db.jemaat.splice(idx, 1)[0];
+      broadcastRealtime({ type: 'DELETE', entity: 'jemaat', gerejaId: deleted.gerejaId, data: { id }, timestamp: new Date().toISOString() });
+      return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, message: 'Jemaat tidak ditemukan' });
   });
 
   // --- Notifikasi Broadcast API ---

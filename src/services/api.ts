@@ -716,29 +716,215 @@ export class ApiService {
     );
   }
 
+  static async deleteJadwal(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/jadwal/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.jadwalIbadah = (db.jadwalIbadah || []).filter((j: JadwalIbadah) => j.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async createPelayanan(data: Partial<Pelayanan>): Promise<Pelayanan> {
+    return requestOrFallback(
+      '/api/pelayanan',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Pelayanan = {
+          id: `ply-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          name: data.name || '',
+          category: data.category || 'Kategorial',
+          leaderName: data.leaderName || 'Koordinator',
+          description: data.description || '',
+          membersCount: 1,
+          meetingTime: data.meetingTime || 'Setiap Minggu'
+        };
+        db.pelayanan = [newItem, ...(db.pelayanan || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
+  }
+
+  static async deletePelayanan(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/pelayanan/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.pelayanan = (db.pelayanan || []).filter((p: Pelayanan) => p.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async createStruktur(data: Partial<StrukturOrganisasi>): Promise<StrukturOrganisasi> {
+    return requestOrFallback(
+      '/api/struktur',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: StrukturOrganisasi = {
+          id: `stk-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          name: data.name || '',
+          position: data.position || 'Pengurus',
+          photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+          period: data.period || '2024-2027',
+          level: data.level || 2
+        };
+        db.strukturOrganisasi = [newItem, ...(db.strukturOrganisasi || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
+  }
+
+  static async deleteStruktur(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/struktur/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.strukturOrganisasi = (db.strukturOrganisasi || []).filter((s: StrukturOrganisasi) => s.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async deleteGaleri(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/galeri/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.galeri = (db.galeri || []).filter((g: Galeri) => g.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async deletePokokDoa(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/pokok-doa/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.pokokDoa = (db.pokokDoa || []).filter((d: PokokDoa) => d.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async createKas(data: Partial<Kas>): Promise<Kas> {
+    return requestOrFallback(
+      '/api/kas',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: Kas = {
+          id: `kas-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          title: data.title || '',
+          type: data.type || 'pemasukan',
+          amount: data.amount || 0,
+          category: data.category || 'Lain-lain',
+          date: data.date || new Date().toISOString().split('T')[0],
+          description: data.description || ''
+        };
+        db.kas = [newItem, ...(db.kas || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
+  }
+
+  static async deleteKas(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/kas/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.kas = (db.kas || []).filter((k: Kas) => k.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
+  static async createJemaatMember(data: Partial<JemaatMember>): Promise<JemaatMember> {
+    return requestOrFallback(
+      '/api/jemaat-members',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      },
+      () => {
+        const db = getLocalDb();
+        const newItem: JemaatMember = {
+          id: `jem-${Date.now()}`,
+          gerejaId: data.gerejaId || 'ger-001',
+          fullName: data.fullName || '',
+          gender: data.gender || 'Laki-laki',
+          phone: data.phone || '',
+          address: data.address || '',
+          sector: data.sector || 'Sektor 1',
+          status: 'aktif',
+          avatarUrl: data.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+          joinDate: new Date().toISOString().split('T')[0]
+        };
+        db.jemaat = [newItem, ...(db.jemaat || [])];
+        saveLocalDb(db);
+        return newItem;
+      }
+    );
+  }
+
+  static async deleteJemaatMember(id: string): Promise<boolean> {
+    return requestOrFallback(`/api/jemaat-members/${id}`, { method: 'DELETE' }, () => {
+      const db = getLocalDb();
+      db.jemaat = (db.jemaat || []).filter((j: JemaatMember) => j.id !== id);
+      saveLocalDb(db);
+      return true;
+    });
+  }
+
   static subscribeRealtime(gerejaId: string, onMessage: (msg: RealtimeSyncMessage) => void): () => void {
-    try {
-      const eventSource = new EventSource(`/api/realtime/stream?gerejaId=${gerejaId}`);
-      
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          onMessage(data);
-        } catch (err) {
-          // Ignored
+    let eventSource: EventSource | null = null;
+    let timer: any = null;
+    let isStopped = false;
+
+    const connect = () => {
+      if (isStopped) return;
+      try {
+        eventSource = new EventSource(`/api/realtime/stream?gerejaId=${gerejaId}`);
+        
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            onMessage(data);
+          } catch (err) {}
+        };
+
+        eventSource.onerror = () => {
+          if (eventSource) eventSource.close();
+          if (!isStopped) {
+            timer = setTimeout(connect, 4000);
+          }
+        };
+      } catch (err) {
+        if (!isStopped) {
+          timer = setTimeout(connect, 4000);
         }
-      };
+      }
+    };
 
-      eventSource.onerror = () => {
-        eventSource.close();
-      };
+    connect();
 
-      return () => {
-        eventSource.close();
-      };
-    } catch (err) {
-      return () => {};
-    }
+    return () => {
+      isStopped = true;
+      if (timer) clearTimeout(timer);
+      if (eventSource) eventSource.close();
+    };
   }
 }
 

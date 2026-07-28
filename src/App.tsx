@@ -170,7 +170,7 @@ export default function App() {
       });
   }, []);
 
-  // On Church Selection Change: Load Church Specific Data & Subscribe to Realtime SSE
+  // On Church Selection Change: Load Church Specific Data & Subscribe to Realtime SSE + Polling Fallback
   useEffect(() => {
     if (!selectedGereja) return;
     loadChurchData(selectedGereja.id);
@@ -187,8 +187,14 @@ export default function App() {
       }
     });
 
+    // Polling fallback every 3.5 seconds to guarantee multi-device live sync
+    const interval = setInterval(() => {
+      loadChurchData(selectedGereja.id);
+    }, 3500);
+
     return () => {
       unsubscribe();
+      clearInterval(interval);
     };
   }, [selectedGereja?.id]);
 
